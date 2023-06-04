@@ -1,5 +1,8 @@
 #pragma once
 #include <cstdint>
+#include <cstring>
+#include <filesystem>
+#include <fstream>
 
 namespace jitter::detail {
 
@@ -21,5 +24,15 @@ std::string inline read_file(const std::string file_path) {
     std::terminate();
   }
   return "";
+}
+
+std::vector<std::byte> inline read_binary(const std::string file_path) {
+  std::filesystem::path path{file_path};
+  auto file_size = std::filesystem::file_size(path);
+  std::vector<std::byte> file_contents(file_size);
+  std::ifstream stream(path, std::ios::binary);
+  if (!stream.read((char*)file_contents.data(), file_contents.size()))
+    throw std::runtime_error(file_path + ": " + std::strerror(errno));
+  return std::move(file_contents);
 }
 }  // namespace jitter::detail

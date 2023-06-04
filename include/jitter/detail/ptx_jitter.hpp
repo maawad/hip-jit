@@ -12,13 +12,13 @@
 #include <vector>
 
 namespace jitter::detail {
-std::string ptxJIT(hipModule_t& ph_module,
-                   hipFunction_t& ph_kernel,
-                   hiprtcLinkState& linker_state,
-                   const std::string ptx_source,
-                   const std::string kernel_entry_string,
-                   const input_type type,
-                   const bool verbose = false) {
+std::string JIT(hipModule_t& ph_module,
+                hipFunction_t& ph_kernel,
+                hiprtcLinkState& linker_state,
+                const std::vector<std::byte> kernel_binary,
+                const std::string kernel_entry_string,
+                const input_type type,
+                const bool verbose = false) {
   float walltime;
   const unsigned int log_size = 100000;
   char error_log[log_size], info_log[log_size];
@@ -40,11 +40,6 @@ std::string ptxJIT(hipModule_t& ph_module,
   //                                  (void*)error_log,       //
   //                                  (void*)(long)log_size,  //
   //                                  (void*)1,
-  //                                  (void*)4};
-
-  //   std::vector<hiprtcJIT_option> options{HIPRTC_JIT_WALL_TIME,
-  //                                         HIPRTC_JIT_OPTIMIZATION_LEVEL};
-  //   std::vector<void*> option_vals{(void*)&walltime,  //
   //                                  (void*)4};
 
   std::vector<hiprtcJIT_option> options{HIPRTC_JIT_WALL_TIME,
@@ -83,10 +78,10 @@ std::string ptxJIT(hipModule_t& ph_module,
   }
 
   // Load the PTX from the ptx file
-  hip_try(hiprtcLinkAddData(linker_state,
+  hip_try(hiprtcLinkAddData(linker_state,  //
                             jit_input_type,
-                            (void*)ptx_source.c_str(),
-                            strlen(ptx_source.c_str()) + 1,
+                            (void*)kernel_binary.data(),
+                            kernel_binary.size() + 1,
                             0,
                             0,
                             0,
@@ -99,12 +94,11 @@ std::string ptxJIT(hipModule_t& ph_module,
 
   // Linker walltime and info_log were requested in options above.
   if (verbose) {
-    printf("--------------------------------------------------------\n"
-           "Link Completed in %f ms.\n"
-           "Linker Output:\n%s"
-           "\n--------------------------------------------------------\n",
-           walltime,
-           info_log);
+    std::cout << "--------------------------------------------------------\n";
+    std::cout << "Link Completed in " << walltime << " ms.\n";
+    std::cout << "Linker info output: \n" << info_log << '\n';
+    std::cout << "Linker error output: \n" << error_log << '\n';
+    std::cout << "--------------------------------------------------------\n";
   }
   // Load resulting cuBin into module
   hip_try(hipModuleLoadData(&ph_module, bin_out));
@@ -119,5 +113,5 @@ std::string ptxJIT(hipModule_t& ph_module,
   if (verbose) std::cout << "Destroyed link" << std::endl;
 
   return std::string(info_log);
-}  // namespace jitter::detail
+}
 }  // namespace jitter::detail

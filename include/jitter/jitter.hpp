@@ -5,8 +5,12 @@
 #include <hip/hiprtc.h>
 
 #include "detail/ptx_jitter.hpp"
-#include "detail/read_ptx.hpp"
+#include "detail/readers.hpp"
 #include "types.hpp"
+
+// std::
+#include <cstddef>
+
 namespace jitter {
 
 struct kernel {
@@ -18,7 +22,8 @@ struct kernel {
       , type_{type}
       , link_state_{}
       , kernel_path_(kernel_path)
-      , kernel_source_("")
+      //   , kernel_source_("")
+      , kernel_binary_{}
       , kernel_entry_string_(kernel_entry_string) {
     hip_try(hipInit(0));
   }
@@ -34,15 +39,15 @@ struct kernel {
     if (verbose) { std::cout << "Kernel: " << kernel_entry_string_ << " launched" << std::endl; }
   }
   std::string compile(const bool verbose = false) {
-    if (kernel_source_ == "") {
+    if (kernel_binary_.empty()) {
       if (kernel_path_ == "") return "Empty kernel";
-      kernel_source_ = detail::read_file(kernel_path_);
+      kernel_binary_ = detail::read_binary(kernel_path_);
+      if (verbose) std::cout << "Read " << kernel_path_ << std::endl;
     }
 
-    return detail::ptxJIT(
-        h_module_, h_kernel_, link_state_, kernel_source_, kernel_entry_string_, type_, verbose);
+    return detail::JIT(
+        h_module_, h_kernel_, link_state_, kernel_binary_, kernel_entry_string_, type_, verbose);
   }
-  void set_kernel_source(const std::string source) { kernel_source_ = source; }
   void set_kernel_entry(const std::string entry) { kernel_entry_string_ = entry; }
 
  private:
@@ -51,7 +56,8 @@ struct kernel {
   input_type type_;
   hiprtcLinkState link_state_;
   std::string kernel_path_;
-  std::string kernel_source_;
+  //   std::string kernel_source_;
+  std::vector<std::byte> kernel_binary_;
   std::string kernel_entry_string_;
 };
 }  // namespace jitter
