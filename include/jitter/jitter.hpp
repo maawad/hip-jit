@@ -5,13 +5,16 @@
 
 #include "detail/ptx_jitter.hpp"
 #include "detail/read_ptx.hpp"
-
+#include "types.hpp"
 namespace jitter {
 
 struct kernel {
-  kernel(const std::string kernel_path, const std::string kernel_entry_string)
+  kernel(const std::string kernel_path,
+         const std::string kernel_entry_string,
+         const input_type type)
       : h_module_{}
       , h_kernel_{}
+      , type_{type}
       , link_state_{}
       , kernel_path_(kernel_path)
       , kernel_source_("")
@@ -36,7 +39,7 @@ struct kernel {
     }
 
     return detail::ptxJIT(
-        h_module_, h_kernel_, link_state_, kernel_source_, kernel_entry_string_, verbose);
+        h_module_, h_kernel_, link_state_, kernel_source_, kernel_entry_string_, type_, verbose);
   }
   void set_kernel_source(const std::string source) { kernel_source_ = source; }
   void set_kernel_entry(const std::string entry) { kernel_entry_string_ = entry; }
@@ -44,6 +47,7 @@ struct kernel {
  private:
   hipModule_t h_module_;
   hipFunction_t h_kernel_;
+  input_type type_;
   hiprtcLinkState link_state_;
   std::string kernel_path_;
   std::string kernel_source_;

@@ -11,14 +11,13 @@
 void gpu_build(int argc, char** argv) {
   std::vector<std::string> arguments(argv, argv + argc);
 
-  const bool verbose            = get_arg_value<bool>(arguments, "verbose").value_or(true);
-  const std::string kernel_path = get_arg_value<std::string>(arguments, "path").value_or("");
-
-  const std::string kernel_entry = "myKernel";
+  const bool verbose             = get_arg_value<bool>(arguments, "verbose").value_or(true);
+  const std::string kernel_path  = get_arg_value<std::string>(arguments, "path").value_or("");
+  const std::string kernel_entry = get_arg_value<std::string>(arguments, "entry").value_or("");
 
   auto device = get_hip_device(0, verbose);
 
-  jitter::kernel kernel(kernel_path, kernel_entry);
+  jitter::kernel kernel(kernel_path, kernel_entry, jitter::input_type::LLVM_BITCODE);
   kernel.compile(verbose);
   if (verbose) std::cout << "Ctor!" << std::endl;
   void* args;
