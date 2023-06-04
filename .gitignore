@@ -2,8 +2,9 @@
 *.json
 *.db
 *.txt
-tmp/
+!CMakeLists.txt
 
+tmp/
 *.i
 *.ii
 *.gpu
