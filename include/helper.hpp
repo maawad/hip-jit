@@ -1,3 +1,4 @@
+#pragma once
 #define hip_try(call)                                                                 \
   do {                                                                                \
     hipError_t err = static_cast<hipError_t>(call);                                   \

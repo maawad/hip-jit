@@ -1,3 +1,4 @@
+#pragma once
 // hip
 #include <hip/hip_ext.h>
 #include <hip/hip_runtime.h>
@@ -35,7 +36,7 @@ struct kernel {
   std::string compile(const bool verbose = false) {
     if (kernel_source_ == "") {
       if (kernel_path_ == "") return "Empty kernel";
-      kernel_source_ = detail::read_ptx(kernel_path_);
+      kernel_source_ = detail::read_file(kernel_path_);
     }
 
     return detail::ptxJIT(
